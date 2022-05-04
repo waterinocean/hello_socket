@@ -35,42 +35,50 @@ int main(int argc, char* argv[])
     if (connect(clnt_sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) == -1)
         error_handling("connect() error.");
 
-    memset(msg, 0, BUF_SIZE);
-
-    //ask question and get result
-    printf("please input the opreate number count: \n");
-    int op_cnt = 0;
-    scanf("%d", &op_cnt);
-    if (op_cnt == 0)
-        error_handling("the input is error!");
-
-    int index = 0;    
-    *(int64_t*)msg = op_cnt;
-    index += 4;
-    for (int i = 0; i < op_cnt; i++)
+    while (1)
     {
-        printf("please input the number: \n");
-        int op_value =  0;
-        scanf("%d", &op_value);
-        *(int64_t*)(msg + index) = op_value;
-        index += 4;
-    }
-    printf("please input an operate, + - * /");
-    char op = '\0';
-    scanf("%c", &op);
-    *(char*)(msg + index) = op;
-    index += 1;
-    *(char*)(msg + index) = 'e';
-    index += 1;
+        memset(msg, 0, BUF_SIZE);
+        //ask question and get result
+        printf("please input the opreate number count(q to quit): \n");
+        char op_str;
+        scanf("%c", &op_str);
+        if ('q' == op_str || 'Q' == op_str)
+            break;
+        int op_cnt = op_str;
+        if (op_cnt == 0)
+            error_handling("the input is error!");
 
-    //send msg and recv answer
-    if (write(clnt_sock, msg, index) == -1)
-        error_handling("write() error.");
-    int recv_len = 0;
-    if ((recv_len = read(clnt_sock, msg, 1024)) == -1)
-        error_handling("read() error.");
-    int res = *(int64_t*)msg;
-    printf("the answer is : %d", res);
+        int index = 0;    
+        *(int64_t*)msg = op_cnt;
+        index += 4;
+        for (int i = 0; i < op_cnt; i++)
+        {
+            printf("please input the number: \n");
+            int op_value =  0;
+            scanf("%d", &op_value);
+            *(int64_t*)(msg + index) = op_value;
+            index += 4;
+        }
+        printf("please input an operate: + - * /");
+        char op;
+        scanf("%c", &op);
+        *(char*)(msg + index) = op;
+        index += 1;
+        *(char*)(msg + index) = 'e';
+        index += 1;
+
+        //send msg and recv answer
+        if (write(clnt_sock, msg, index) == -1)
+            error_handling("write() error.");
+        int recv_len = 0;
+        if ((recv_len = read(clnt_sock, msg, 1024)) == -1)
+            error_handling("read() error.");
+        if (recv_len < 4)
+            error_handling("read content error.");
+            
+        int res = *(int64_t*)msg;
+        printf("the answer is : %d", res);
+    }
 
     close(clnt_sock);
     return 0;
