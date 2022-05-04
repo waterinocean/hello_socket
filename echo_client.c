@@ -43,9 +43,17 @@ int main(int argc, char* argv[])
         if (!strcmp(msg, "q\n") || !strcmp(msg, "Q\n"))
             break;
         
-        write(sock, msg, strlen(msg));
-        str_len = read(sock, msg, BUF_SIZE-1);
-        msg[str_len] = 0;
+        str_len = write(sock, msg, strlen(msg));
+        int rec_len = 0;
+        while (rec_len < str_len)
+        {
+            int rec_cnt = read(sock, msg, BUF_SIZE-1);
+            if (rec_cnt == -1)
+                error_handling("read() error.");
+            
+            rec_len += rec_cnt;
+        }
+        msg[rec_len] = 0;
         printf("Message from server: %s", msg);
     }
     close(sock);
